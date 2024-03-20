@@ -1,0 +1,61 @@
+
+start order 
+proxy.core.pool.AcceptorPool        -> proxy.http.handler.HttpProtocolHandler
+    event_manager -> EventManager           setup()
+    acceptors  -> AcceptorPool                              setup(listeners, executor queue/pid/locks or [] , event_queue)
+    listeners  -> ListenerPool     setup()
+    executors  -> ThreadlessPool (remoteExecutor)
+
+
+_register_signals(self)
+        # TODO: Define SIGUSR1, SIGUSR2
+        signal.signal(signal.SIGINT, self._handle_exit_signal)
+        signal.signal(signal.SIGTERM, self._handle_exit_signal)
+        if not IS_WINDOWS:
+            if hasattr(signal, 'SIGINFO'):
+                signal.signal(      # pragma: no cover
+                    signal.SIGINFO,       # pylint: disable=E1101
+                    self._handle_siginfo,
+                )
+            signal.signal(signal.SIGHUP, self._handle_exit_signal)
+            # TODO: SIGQUIT is ideally meant to terminate with core dumps
+            signal.signal(signal.SIGQUIT, self._handle_exit_signal)
+
+AcceptorPool
+    flags.num_acceptors : argparse.Namespace
+      Acceptor.start()
+            On start-up, `Acceptor` accepts a file descriptor which will be used to
+            accept new work.  File descriptor is accepted over a `fd_queue`.
+
+            `Acceptor` goes on to listen for new work over the received server socket.
+            By default, `Acceptor` will spawn a new thread to handle each work.
+
+
+socks.Socks4Operations
+    define proxy cmd : CONNECT / BIND
+
+
+http.server.HttpWebServerPlugin
+    support HTTP / HTTPS / WEBSOCKET    
+    on_request_complete() 
+        -> _try_route(path) or _try_static_or_404
+            WS ? switch_to_websocket() and on_websocket_open()
+
+        on_client_data()
+            parse WebsocketFrame  , continue on_websocket_message() return
+                        InspectTrafficPlugin(WebSocketTransportBasePlugin): 
+                                **** only support inspect now *****
+            else try HttpParser
+
+
+proxy.core.http.proxy.HttpProxyPlugin      
+    upstream -> TcpServerConnection
+    response HttpParser
+    pipeline_request
+    pipeline_response
+    client  
+
+    get_descriptors -> r , w 
+    write_to_descriptors(w)
+    read_from_descriptors(r)      
+    on_client_data
